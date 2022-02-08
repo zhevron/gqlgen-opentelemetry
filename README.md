@@ -6,9 +6,7 @@ This library provides OpenTelemetry (OTEL) instrumentation for `gqlgen` server r
 Add the `gqlgen_opentelemetry.Tracer` extension to your server:
 ```go
 h := handler.NewDefaultServer(schema)
-h.Use(gqlgen_opentelemetry.Tracer{
-    Tracer: tracerProvider.Tracer("my-service"),
-})
+h.Use(gqlgen_opentelemetry.Tracer{})
 ```
 
 ## Options
@@ -16,4 +14,4 @@ The following options are available on the extension:
 
 `IncludeVariables`: Whether to include variables and their values in the trace span attributes. (Default: `false`)
 
-`Tracer`: The OTEL tracer to use. If none is provided, a no-op tracer will be used.
+`Tracer`: The OTEL tracer to use. If none is provided, the global OTEL tracer provider will be used.
