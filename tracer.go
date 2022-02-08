@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/99designs/gqlgen/graphql"
+	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
@@ -36,7 +37,7 @@ func (t Tracer) Validate(schema graphql.ExecutableSchema) error {
 
 func (t Tracer) InterceptOperation(ctx context.Context, next graphql.OperationHandler) graphql.ResponseHandler {
 	oc := graphql.GetOperationContext(ctx)
-	ctx, span := t.tracer().Start(ctx, oc.RawQuery, trace.WithAttributes(
+	ctx, span := t.tracer(ctx).Start(ctx, oc.RawQuery, trace.WithAttributes(
 		attribute.String("component", graphqlComponent),
 		attribute.String(graphqlOperationName, getOperationName(oc)),
 		attribute.String(graphqlOperationType, string(oc.Operation.Operation)),
@@ -55,7 +56,7 @@ func (t Tracer) InterceptOperation(ctx context.Context, next graphql.OperationHa
 
 func (t Tracer) InterceptField(ctx context.Context, next graphql.Resolver) (interface{}, error) {
 	fc := graphql.GetFieldContext(ctx)
-	ctx, span := t.tracer().Start(ctx, fc.Object+"."+fc.Field.Name, trace.WithAttributes(
+	ctx, span := t.tracer(ctx).Start(ctx, fc.Object+"."+fc.Field.Name, trace.WithAttributes(
 		attribute.String(graphqlFieldName, fc.Field.Name),
 		attribute.String(graphqlFieldPath, fc.Path().String()),
 		attribute.String(graphqlFieldType, fc.Object),
@@ -71,11 +72,15 @@ func (t Tracer) InterceptField(ctx context.Context, next graphql.Resolver) (inte
 	return res, err
 }
 
-func (t Tracer) tracer() trace.Tracer {
+func (t Tracer) tracer(ctx context.Context) trace.Tracer {
 	if t.Tracer != nil {
 		return t.Tracer
 	}
-	return trace.NewNoopTracerProvider().Tracer(extensionName)
+	if span := trace.SpanFromContext(ctx); span.SpanContext().IsValid() {
+		return span.TracerProvider().Tracer(extensionName)
+	} else {
+		return otel.GetTracerProvider().Tracer(extensionName)
+	}
 }
 
 func getOperationName(oc *graphql.OperationContext) string {
