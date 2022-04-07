@@ -47,10 +47,10 @@ github.com/vektah/gqlparser/v2 v2.4.0 h1:EmA4dw9mqHm0j6Xzb9T21hOrp3oXmxnS40vwki7
 github.com/vektah/gqlparser/v2 v2.4.0/go.mod h1:flJWIR04IMQPGz+BXLrORkrARBxv/rtyIAFvd/MceW0=
 github.com/yuin/goldmark v1.1.32/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
 github.com/yuin/goldmark v1.4.1/go.mod h1:mwnBkeHKe2W/ZEtQ+71ViKU8L12m81fl3OWwC1Zlc8k=
-go.opentelemetry.io/otel v1.6.1 h1:6r1YrcTenBvYa1x491d0GGpTVBsNECmrc/K6b+zDeis=
-go.opentelemetry.io/otel v1.6.1/go.mod h1:blzUabWHkX6LJewxvadmzafgh/wnvBSDBdOuwkAtrWQ=
-go.opentelemetry.io/otel/trace v1.6.1 h1:f8c93l5tboBYZna1nWk0W9DYyMzJXDWdZcJZ0Kb400U=
-go.opentelemetry.io/otel/trace v1.6.1/go.mod h1:RkFRM1m0puWIq10oxImnGEduNBzxiN7TXluRBtE+5j0=
+go.opentelemetry.io/otel v1.6.2 h1:iLrj1F5ydCSVc4CGjBX2ou/QRav3C8xHjHlVoch6g4w=
+go.opentelemetry.io/otel v1.6.2/go.mod h1:MUBZHaB2cm6CahEBHQPq9Anos7IXynP/noVpjsxQTSc=
+go.opentelemetry.io/otel/trace v1.6.2 h1:oY7i1k6XD/ozlGo7ASy+H1UdkNcj9cPfuklaYSXtoFk=
+go.opentelemetry.io/otel/trace v1.6.2/go.mod h1:RMqfw8Mclba1p7sXDmEDBvrB8jw65F6GOoN1fyyXTzk=
 golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2/go.mod h1:djNgcEr1/C05ACkg1iLfiJU5Ep61QUkGW8qpdssI0+w=
 golang.org/x/crypto v0.0.0-20191011191535-87dc89f01550/go.mod h1:yigFU9vqHzYiE8UmvKecakEJjdnWj3jj499lnFckfCI=
 golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9/go.mod h1:LzIPMQfyMNhhGPhUkYOs5KpL4U8rLKemX1yGLhDgUto=
