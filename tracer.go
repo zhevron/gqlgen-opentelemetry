@@ -67,7 +67,7 @@ func (t Tracer) InterceptField(ctx context.Context, next graphql.Resolver) (inte
 	defer span.End()
 	res, err := next(ctx)
 	if errList := graphql.GetFieldErrors(ctx, fc); len(errList) > 0 {
-		span.SetStatus(codes.Error, "")
+		span.SetStatus(codes.Error, errList.Error())
 		for _, err := range errList {
 			span.RecordError(err)
 		}
