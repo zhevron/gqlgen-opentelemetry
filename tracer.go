@@ -12,14 +12,14 @@ import (
 )
 
 const (
-	extensionName        = "github.com/zhevron/gqlgen-opentelemetry"
-	graphqlComponent     = "graphql"
-	graphqlFieldName     = "graphql.field.name"
-	graphqlFieldPath     = "graphql.field.path"
-	graphqlFieldType     = "graphql.field.type"
-	graphqlOperationName = "graphql.operation.name"
-	graphqlOperationType = "graphql.operation.type"
-	graphqlVariables     = "graphql.variables."
+	extensionName          = "github.com/zhevron/gqlgen-opentelemetry"
+	graphqlComponent       = "graphql"
+	graphqlFieldName       = "graphql.field.name"
+	graphqlFieldPath       = "graphql.field.path"
+	graphqlFieldType       = "graphql.field.type"
+	graphqlOperationName   = "graphql.operation.name"
+	graphqlOperationType   = "graphql.operation.type"
+	graphqlVariablesPrefix = "graphql.variables."
 )
 
 type Tracer struct {
@@ -46,7 +46,7 @@ func (t Tracer) InterceptOperation(ctx context.Context, next graphql.OperationHa
 	if t.IncludeVariables {
 		for name, value := range oc.Variables {
 			span.SetAttributes(attribute.KeyValue{
-				Key:   attribute.Key(graphqlVariables + name),
+				Key:   attribute.Key(graphqlVariablesPrefix + name),
 				Value: makeAttributeValue(value),
 			})
 		}
@@ -56,10 +56,10 @@ func (t Tracer) InterceptOperation(ctx context.Context, next graphql.OperationHa
 
 func (t Tracer) InterceptField(ctx context.Context, next graphql.Resolver) (interface{}, error) {
 	fc := graphql.GetFieldContext(ctx)
-	ctx, span := t.tracer(ctx).Start(ctx, fc.Object+"."+fc.Field.Name, trace.WithAttributes(
+	ctx, span := t.tracer(ctx).Start(ctx, fc.Field.ObjectDefinition.Name+"."+fc.Field.Name, trace.WithAttributes(
 		attribute.String(graphqlFieldName, fc.Field.Name),
 		attribute.String(graphqlFieldPath, fc.Path().String()),
-		attribute.String(graphqlFieldType, fc.Object),
+		attribute.String(graphqlFieldType, fc.Field.ObjectDefinition.Name),
 	))
 	defer span.End()
 	res, err := next(ctx)
