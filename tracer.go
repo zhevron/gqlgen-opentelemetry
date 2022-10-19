@@ -20,6 +20,7 @@ const (
 	graphqlOperationName   = "graphql.operation.name"
 	graphqlOperationType   = "graphql.operation.type"
 	graphqlVariablesPrefix = "graphql.variables."
+	graphqlQuery           = "graphql.query"
 )
 
 type Tracer struct {
@@ -37,10 +38,12 @@ func (t Tracer) Validate(schema graphql.ExecutableSchema) error {
 
 func (t Tracer) InterceptOperation(ctx context.Context, next graphql.OperationHandler) graphql.ResponseHandler {
 	oc := graphql.GetOperationContext(ctx)
-	ctx, span := t.tracer(ctx).Start(ctx, oc.RawQuery, trace.WithAttributes(
+	operationName := getOperationName(oc)
+	ctx, span := t.tracer(ctx).Start(ctx, operationName, trace.WithAttributes(
 		attribute.String("component", graphqlComponent),
-		attribute.String(graphqlOperationName, getOperationName(oc)),
+		attribute.String(graphqlOperationName, operationName),
 		attribute.String(graphqlOperationType, string(oc.Operation.Operation)),
+		attribute.String(graphqlQuery, oc.RawQuery),
 	))
 	defer span.End()
 	if t.IncludeVariables {
