@@ -59,6 +59,9 @@ func (t Tracer) InterceptOperation(ctx context.Context, next graphql.OperationHa
 
 func (t Tracer) InterceptField(ctx context.Context, next graphql.Resolver) (interface{}, error) {
 	fc := graphql.GetFieldContext(ctx)
+	if !fc.IsMethod || !fc.IsResolver {
+		return next(ctx)
+	}
 	ctx, span := t.tracer(ctx).Start(ctx, fc.Field.ObjectDefinition.Name+"."+fc.Field.Name, trace.WithAttributes(
 		attribute.String(graphqlFieldName, fc.Field.Name),
 		attribute.String(graphqlFieldPath, fc.Path().String()),
