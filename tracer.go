@@ -45,7 +45,6 @@ func (t Tracer) InterceptOperation(ctx context.Context, next graphql.OperationHa
 		attribute.String(graphqlOperationType, string(oc.Operation.Operation)),
 		attribute.String(graphqlQuery, oc.RawQuery),
 	))
-	defer span.End()
 	if t.IncludeVariables {
 		for name, value := range oc.Variables {
 			span.SetAttributes(attribute.KeyValue{
@@ -54,7 +53,9 @@ func (t Tracer) InterceptOperation(ctx context.Context, next graphql.OperationHa
 			})
 		}
 	}
-	return next(ctx)
+	handler := next(ctx)
+	span.End()
+	return handler
 }
 
 func (t Tracer) InterceptField(ctx context.Context, next graphql.Resolver) (interface{}, error) {
@@ -67,7 +68,6 @@ func (t Tracer) InterceptField(ctx context.Context, next graphql.Resolver) (inte
 		attribute.String(graphqlFieldPath, fc.Path().String()),
 		attribute.String(graphqlFieldType, fc.Field.ObjectDefinition.Name),
 	))
-	defer span.End()
 	res, err := next(ctx)
 	if errList := graphql.GetFieldErrors(ctx, fc); len(errList) > 0 {
 		span.SetStatus(codes.Error, errList.Error())
@@ -75,6 +75,7 @@ func (t Tracer) InterceptField(ctx context.Context, next graphql.Resolver) (inte
 			span.RecordError(err)
 		}
 	}
+	span.End()
 	return res, err
 }
 
