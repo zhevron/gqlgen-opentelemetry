@@ -4,6 +4,6 @@ go 1.16
 
 require (
 	github.com/99designs/gqlgen v0.17.30
-	go.opentelemetry.io/otel v1.14.0
-	go.opentelemetry.io/otel/trace v1.14.0
+	go.opentelemetry.io/otel v1.15.0
+	go.opentelemetry.io/otel/trace v1.15.0
 )
