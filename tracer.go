@@ -15,6 +15,7 @@ import (
 
 const (
 	extensionName          = "github.com/zhevron/gqlgen-opentelemetry"
+	graphqlFieldAlias      = "graphql.field.alias"
 	graphqlFieldName       = "graphql.field.name"
 	graphqlFieldPath       = "graphql.field.path"
 	graphqlFieldType       = "graphql.field.type"
@@ -22,8 +23,9 @@ const (
 )
 
 type Tracer struct {
-	IncludeVariables bool
-	Tracer           trace.Tracer
+	IncludeFieldSpans bool
+	IncludeVariables  bool
+	Tracer            trace.Tracer
 }
 
 func (Tracer) ExtensionName() string {
@@ -59,14 +61,19 @@ func (t Tracer) InterceptOperation(ctx context.Context, next graphql.OperationHa
 
 func (t Tracer) InterceptField(ctx context.Context, next graphql.Resolver) (interface{}, error) {
 	fc := graphql.GetFieldContext(ctx)
-	if !fc.IsMethod || !fc.IsResolver {
+	if !t.IncludeFieldSpans || !fc.IsMethod || !fc.IsResolver {
 		return next(ctx)
 	}
-	ctx, span := t.getTracer(ctx).Start(ctx, fc.Field.ObjectDefinition.Name+"."+fc.Field.Name, trace.WithAttributes(
+	spanName := fc.Field.ObjectDefinition.Name + "." + fc.Field.Name
+	attributes := []attribute.KeyValue{
 		attribute.String(graphqlFieldName, fc.Field.Name),
 		attribute.String(graphqlFieldPath, fc.Path().String()),
 		attribute.String(graphqlFieldType, fc.Field.ObjectDefinition.Name),
-	))
+	}
+	if fc.Field.Alias != "" {
+		attributes = append(attributes, attribute.String(graphqlFieldAlias, fc.Field.Alias))
+	}
+	ctx, span := t.getTracer(ctx).Start(ctx, spanName, trace.WithAttributes(attributes...))
 	res, err := next(ctx)
 	if errList := graphql.GetFieldErrors(ctx, fc); len(errList) > 0 {
 		span.SetStatus(codes.Error, errList.Error())

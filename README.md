@@ -12,6 +12,8 @@ h.Use(gqlgen_opentelemetry.Tracer{})
 ## Options
 The following options are available on the extension:
 
+`IncludeFieldSpans`: Whether to create an additional child span for each field requested. (Default: `false`)
+
 `IncludeVariables`: Whether to include variables and their values in the trace span attributes. (Default: `false`)
 
 `Tracer`: The OTEL tracer to use. If none is provided, the global OTEL tracer provider will be used.
