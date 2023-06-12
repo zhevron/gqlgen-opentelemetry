@@ -1,0 +1,8 @@
+schema:
+- schema.graphql
+exec:
+  layout: follow-schema
+  dir: generated
+  package: generated
+resolver:
+  filename: resolvers.go
