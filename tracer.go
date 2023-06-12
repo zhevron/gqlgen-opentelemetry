@@ -70,7 +70,7 @@ func (t Tracer) InterceptField(ctx context.Context, next graphql.Resolver) (inte
 		attribute.String(graphqlFieldPath, fc.Path().String()),
 		attribute.String(graphqlFieldType, fc.Field.ObjectDefinition.Name),
 	}
-	if fc.Field.Alias != "" {
+	if fc.Field.Alias != fc.Field.Name {
 		attributes = append(attributes, attribute.String(graphqlFieldAlias, fc.Field.Alias))
 	}
 	ctx, span := t.getTracer(ctx).Start(ctx, spanName, trace.WithAttributes(attributes...))
