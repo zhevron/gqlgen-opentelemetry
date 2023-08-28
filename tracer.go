@@ -14,6 +14,7 @@ import (
 
 const (
 	extensionName          = "github.com/zhevron/gqlgen-opentelemetry"
+	extensionVersion       = "1.0.4"
 	graphqlFieldAlias      = "graphql.field.alias"
 	graphqlFieldName       = "graphql.field.name"
 	graphqlFieldPath       = "graphql.field.path"
@@ -37,13 +38,14 @@ func (t Tracer) Validate(schema graphql.ExecutableSchema) error {
 
 func (t Tracer) InterceptOperation(ctx context.Context, next graphql.OperationHandler) graphql.ResponseHandler {
 	oc := graphql.GetOperationContext(ctx)
-	operationName := getOperationName(oc)
 	operationType := getOperationTypeAttribute(oc)
-	spanName := makeSpanName(operationName, operationType.Value.AsString())
-	ctx, span := t.getTracer(ctx).Start(ctx, spanName, trace.WithAttributes(
-		semconv.GraphqlOperationName(operationName),
+	spanName := makeSpanName(oc.Operation.Name, operationType.Value.AsString())
+	ctx, span := t.getTracer(ctx).Start(ctx, spanName, trace.WithSpanKind(trace.SpanKindServer), trace.WithAttributes(
+		semconv.GraphqlOperationName(oc.Operation.Name),
 		operationType,
 		semconv.GraphqlDocument(oc.RawQuery),
+		semconv.OTelLibraryName(extensionName),
+		semconv.OTelLibraryVersion(extensionVersion),
 	))
 	if t.IncludeVariables {
 		for name, value := range oc.Variables {
@@ -68,11 +70,13 @@ func (t Tracer) InterceptField(ctx context.Context, next graphql.Resolver) (inte
 		attribute.String(graphqlFieldName, fc.Field.Name),
 		attribute.String(graphqlFieldPath, fc.Path().String()),
 		attribute.String(graphqlFieldType, fc.Field.ObjectDefinition.Name),
+		semconv.OTelLibraryName(extensionName),
+		semconv.OTelLibraryVersion(extensionVersion),
 	}
 	if fc.Field.Alias != fc.Field.Name {
 		attributes = append(attributes, attribute.String(graphqlFieldAlias, fc.Field.Alias))
 	}
-	ctx, span := t.getTracer(ctx).Start(ctx, spanName, trace.WithAttributes(attributes...))
+	ctx, span := t.getTracer(ctx).Start(ctx, spanName, trace.WithSpanKind(trace.SpanKindServer), trace.WithAttributes(attributes...))
 	res, err := next(ctx)
 	if errList := graphql.GetFieldErrors(ctx, fc); len(errList) > 0 {
 		span.SetStatus(codes.Error, errList.Error())
@@ -104,13 +108,6 @@ func makeSpanName(operationName, operationType string) string {
 		spanName += " " + operationName
 	}
 	return spanName
-}
-
-func getOperationName(oc *graphql.OperationContext) string {
-	if oc.Operation.Name != "" {
-		return oc.Operation.Name
-	}
-	return oc.RawQuery
 }
 
 func getOperationTypeAttribute(oc *graphql.OperationContext) attribute.KeyValue {

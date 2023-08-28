@@ -40,7 +40,7 @@ func (s *TracerSuite) TestQuery_SpanCreated() {
 
 	spans := s.Exporter.GetSpans()
 	s.Require().Len(spans, 1)
-	s.Require().Len(spans[0].Attributes, 3)
+	s.Require().Len(spans[0].Attributes, 5)
 
 	operationName := findAttributeByName(spans[0].Attributes, semconv.GraphqlOperationNameKey)
 	s.Require().NotNil(operationName)
@@ -77,9 +77,11 @@ func (s *TracerSuite) TestQuery_WithFieldSpans() {
 
 	spans := s.Exporter.GetSpans()
 	s.Require().Len(spans, 2)
-	s.Require().Len(spans[1].Attributes, 3)
+	span := findSpanByName(spans, "Query.greeting")
+	s.Require().NotNil(span)
+	s.Require().Len(span.Attributes, 5)
 
-	fieldName := findAttributeByName(spans[1].Attributes, graphqlFieldName)
+	fieldName := findAttributeByName(span.Attributes, graphqlFieldName)
 	s.Require().NotNil(fieldName)
 	s.Require().Equal(fieldName.Value.AsString(), "greeting")
 }
@@ -94,12 +96,14 @@ func (s *TracerSuite) TestQuery_WithFieldSpans_Alias() {
 
 	spans := s.Exporter.GetSpans()
 	s.Require().Len(spans, 2)
+	span := findSpanByName(spans, "Query.greeting")
+	s.Require().NotNil(span)
 
-	fieldName := findAttributeByName(spans[1].Attributes, graphqlFieldName)
+	fieldName := findAttributeByName(span.Attributes, graphqlFieldName)
 	s.Require().NotNil(fieldName)
 	s.Require().Equal(fieldName.Value.AsString(), "greeting")
 
-	fieldAlias := findAttributeByName(spans[1].Attributes, graphqlFieldAlias)
+	fieldAlias := findAttributeByName(span.Attributes, graphqlFieldAlias)
 	s.Require().NotNil(fieldAlias)
 	s.Require().Equal(fieldAlias.Value.AsString(), "myGreeting")
 }
@@ -113,7 +117,7 @@ func (s *TracerSuite) TestMutation_SpanCreated() {
 
 	spans := s.Exporter.GetSpans()
 	s.Require().Len(spans, 1)
-	s.Require().Len(spans[0].Attributes, 3)
+	s.Require().Len(spans[0].Attributes, 5)
 
 	operationName := findAttributeByName(spans[0].Attributes, semconv.GraphqlOperationNameKey)
 	s.Require().NotNil(operationName)
@@ -176,6 +180,15 @@ func findAttributeByName(attributes []attribute.KeyValue, name attribute.Key) *a
 	for _, a := range attributes {
 		if a.Key == name {
 			return &a
+		}
+	}
+	return nil
+}
+
+func findSpanByName(spans tracetest.SpanStubs, name string) *tracetest.SpanStub {
+	for _, span := range spans {
+		if span.Name == name {
+			return &span
 		}
 	}
 	return nil
