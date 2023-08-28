@@ -36,7 +36,10 @@ func (t Tracer) Validate(schema graphql.ExecutableSchema) error {
 	return nil
 }
 
-func (t Tracer) InterceptOperation(ctx context.Context, next graphql.OperationHandler) graphql.ResponseHandler {
+func (t Tracer) InterceptResponse(ctx context.Context, next graphql.ResponseHandler) *graphql.Response {
+	if !graphql.HasOperationContext(ctx) {
+		return next(ctx)
+	}
 	oc := graphql.GetOperationContext(ctx)
 	operationType := getOperationTypeAttribute(oc)
 	spanName := makeSpanName(oc.Operation.Name, operationType.Value.AsString())
@@ -47,6 +50,7 @@ func (t Tracer) InterceptOperation(ctx context.Context, next graphql.OperationHa
 		semconv.OTelLibraryName(extensionName),
 		semconv.OTelLibraryVersion(extensionVersion),
 	))
+	defer span.End()
 	if t.IncludeVariables {
 		for name, value := range oc.Variables {
 			span.SetAttributes(attribute.KeyValue{
@@ -55,9 +59,14 @@ func (t Tracer) InterceptOperation(ctx context.Context, next graphql.OperationHa
 			})
 		}
 	}
-	handler := next(ctx)
-	span.End()
-	return handler
+	res := next(ctx)
+	if res != nil && len(res.Errors) > 0 {
+		span.SetStatus(codes.Error, res.Errors.Error())
+		for _, err := range res.Errors {
+			span.RecordError(err)
+		}
+	}
+	return res
 }
 
 func (t Tracer) InterceptField(ctx context.Context, next graphql.Resolver) (interface{}, error) {
@@ -77,6 +86,7 @@ func (t Tracer) InterceptField(ctx context.Context, next graphql.Resolver) (inte
 		attributes = append(attributes, attribute.String(graphqlFieldAlias, fc.Field.Alias))
 	}
 	ctx, span := t.getTracer(ctx).Start(ctx, spanName, trace.WithSpanKind(trace.SpanKindServer), trace.WithAttributes(attributes...))
+	defer span.End()
 	res, err := next(ctx)
 	if errList := graphql.GetFieldErrors(ctx, fc); len(errList) > 0 {
 		span.SetStatus(codes.Error, errList.Error())
@@ -84,7 +94,6 @@ func (t Tracer) InterceptField(ctx context.Context, next graphql.Resolver) (inte
 			span.RecordError(err)
 		}
 	}
-	span.End()
 	return res, err
 }
 
@@ -125,6 +134,6 @@ func getOperationTypeAttribute(oc *graphql.OperationContext) attribute.KeyValue 
 
 var _ interface {
 	graphql.HandlerExtension
-	graphql.OperationInterceptor
+	graphql.ResponseInterceptor
 	graphql.FieldInterceptor
 } = Tracer{}
