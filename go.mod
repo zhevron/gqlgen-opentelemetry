@@ -1,4 +1,4 @@
-module github.com/zhevron/gqlgen-opentelemetry
+module github.com/zhevron/gqlgen-opentelemetry/v2
 
 go 1.16
 
