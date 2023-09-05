@@ -5,7 +5,7 @@ package testserver
 import (
 	"context"
 
-	"github.com/zhevron/gqlgen-opentelemetry/testserver/generated"
+	"github.com/zhevron/gqlgen-opentelemetry/v2/testserver/generated"
 )
 
 type Resolver struct{}
