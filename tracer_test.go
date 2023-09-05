@@ -164,7 +164,7 @@ func (s *TracerSuite) TestMutation_WithVariables() {
 }
 
 func (s *TracerSuite) createTestClient(tracer *Tracer) *client.Client {
-	tracer.Tracer = s.TracerProvider.Tracer("")
+	tracer.TracerProvider = s.TracerProvider
 	handler := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{
 		Resolvers: &testserver.Resolver{},
 	}))

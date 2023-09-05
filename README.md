@@ -25,4 +25,4 @@ The following options are available on the extension:
 
 `IncludeVariables`: Whether to include variables and their values in the trace span attributes. (Default: `false`)
 
-`Tracer`: The OTEL tracer to use. If none is provided, the global OTEL tracer provider will be used.
+`TracerProvider`: The OTEL tracer provider to instantiate a tracer from. If none is provided, the global OTEL tracer provider will be used.

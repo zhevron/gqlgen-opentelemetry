@@ -22,10 +22,15 @@ const (
 	graphqlVariablesPrefix = "graphql.variables."
 )
 
+var baseAttributes = []attribute.KeyValue{
+	semconv.OTelLibraryName(extensionName),
+	semconv.OTelLibraryVersion(extensionVersion),
+}
+
 type Tracer struct {
 	IncludeFieldSpans bool
 	IncludeVariables  bool
-	Tracer            trace.Tracer
+	TracerProvider    trace.TracerProvider
 }
 
 func (Tracer) ExtensionName() string {
@@ -42,15 +47,15 @@ func (t Tracer) InterceptResponse(ctx context.Context, next graphql.ResponseHand
 	}
 	oc := graphql.GetOperationContext(ctx)
 	operationType := getOperationTypeAttribute(oc)
-	spanName := makeSpanName(oc.Operation.Name, operationType.Value.AsString())
-	ctx, span := t.getTracer(ctx).Start(ctx, spanName, trace.WithSpanKind(trace.SpanKindServer), trace.WithAttributes(
+	attributes := append(baseAttributes,
 		semconv.GraphqlOperationName(oc.Operation.Name),
 		operationType,
 		semconv.GraphqlDocument(oc.RawQuery),
-		semconv.OTelLibraryName(extensionName),
-		semconv.OTelLibraryVersion(extensionVersion),
-	))
+	)
+	spanName := makeSpanName(oc.Operation.Name, operationType.Value.AsString())
+	ctx, span := t.getTracer(ctx).Start(ctx, spanName, trace.WithSpanKind(trace.SpanKindServer), trace.WithAttributes(attributes...))
 	defer span.End()
+	span.SetAttributes(baseAttributes...)
 	if t.IncludeVariables {
 		for name, value := range oc.Variables {
 			span.SetAttributes(attribute.KeyValue{
@@ -75,13 +80,11 @@ func (t Tracer) InterceptField(ctx context.Context, next graphql.Resolver) (inte
 		return next(ctx)
 	}
 	spanName := fc.Field.ObjectDefinition.Name + "." + fc.Field.Name
-	attributes := []attribute.KeyValue{
+	attributes := append(baseAttributes,
 		attribute.String(graphqlFieldName, fc.Field.Name),
 		attribute.String(graphqlFieldPath, fc.Path().String()),
 		attribute.String(graphqlFieldType, fc.Field.ObjectDefinition.Name),
-		semconv.OTelLibraryName(extensionName),
-		semconv.OTelLibraryVersion(extensionVersion),
-	}
+	)
 	if fc.Field.Alias != fc.Field.Name {
 		attributes = append(attributes, attribute.String(graphqlFieldAlias, fc.Field.Alias))
 	}
@@ -98,13 +101,14 @@ func (t Tracer) InterceptField(ctx context.Context, next graphql.Resolver) (inte
 }
 
 func (t Tracer) getTracer(ctx context.Context) trace.Tracer {
-	if t.Tracer != nil {
-		return t.Tracer
-	}
 	if span := trace.SpanFromContext(ctx); span.SpanContext().IsValid() {
-		return span.TracerProvider().Tracer(extensionName)
+		return span.TracerProvider().Tracer(extensionName, trace.WithInstrumentationVersion(extensionVersion))
 	} else {
-		return otel.GetTracerProvider().Tracer(extensionName)
+		tp := t.TracerProvider
+		if tp == nil {
+			tp = otel.GetTracerProvider()
+		}
+		return tp.Tracer(extensionName, trace.WithInstrumentationVersion(extensionVersion))
 	}
 }
 
