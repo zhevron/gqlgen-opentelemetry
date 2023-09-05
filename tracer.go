@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/99designs/gqlgen/graphql"
+	"github.com/99designs/gqlgen/graphql/handler/extension"
 	"github.com/vektah/gqlparser/v2/ast"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
@@ -15,10 +16,11 @@ import (
 const (
 	extensionName          = "github.com/zhevron/gqlgen-opentelemetry"
 	extensionVersion       = "1.0.4"
-	graphqlFieldAlias      = "graphql.field.alias"
-	graphqlFieldName       = "graphql.field.name"
-	graphqlFieldPath       = "graphql.field.path"
-	graphqlFieldType       = "graphql.field.type"
+	graphqlComplexity      = attribute.Key("graphql.operation.complexity")
+	graphqlFieldAlias      = attribute.Key("graphql.field.alias")
+	graphqlFieldName       = attribute.Key("graphql.field.name")
+	graphqlFieldPath       = attribute.Key("graphql.field.path")
+	graphqlFieldType       = attribute.Key("graphql.field.type")
 	graphqlVariablesPrefix = "graphql.variables."
 )
 
@@ -47,15 +49,17 @@ func (t Tracer) InterceptResponse(ctx context.Context, next graphql.ResponseHand
 	}
 	oc := graphql.GetOperationContext(ctx)
 	operationType := getOperationTypeAttribute(oc)
-	attributes := append(baseAttributes,
+	spanName := makeSpanName(oc.Operation.Name, operationType.Value.AsString())
+	ctx, span := t.getTracer(ctx).Start(ctx, spanName, trace.WithSpanKind(trace.SpanKindServer), trace.WithAttributes(baseAttributes...))
+	defer span.End()
+	span.SetAttributes(
 		semconv.GraphqlOperationName(oc.Operation.Name),
 		operationType,
 		semconv.GraphqlDocument(oc.RawQuery),
 	)
-	spanName := makeSpanName(oc.Operation.Name, operationType.Value.AsString())
-	ctx, span := t.getTracer(ctx).Start(ctx, spanName, trace.WithSpanKind(trace.SpanKindServer), trace.WithAttributes(attributes...))
-	defer span.End()
-	span.SetAttributes(baseAttributes...)
+	if stats := extension.GetComplexityStats(ctx); stats != nil {
+		span.SetAttributes(graphqlComplexity.Int(stats.Complexity))
+	}
 	if t.IncludeVariables {
 		for name, value := range oc.Variables {
 			span.SetAttributes(attribute.KeyValue{
@@ -80,16 +84,16 @@ func (t Tracer) InterceptField(ctx context.Context, next graphql.Resolver) (inte
 		return next(ctx)
 	}
 	spanName := fc.Field.ObjectDefinition.Name + "." + fc.Field.Name
-	attributes := append(baseAttributes,
-		attribute.String(graphqlFieldName, fc.Field.Name),
-		attribute.String(graphqlFieldPath, fc.Path().String()),
-		attribute.String(graphqlFieldType, fc.Field.ObjectDefinition.Name),
+	ctx, span := t.getTracer(ctx).Start(ctx, spanName, trace.WithSpanKind(trace.SpanKindServer), trace.WithAttributes(baseAttributes...))
+	defer span.End()
+	span.SetAttributes(
+		graphqlFieldName.String(fc.Field.Name),
+		graphqlFieldPath.String(fc.Path().String()),
+		graphqlFieldType.String(fc.Field.ObjectDefinition.Name),
 	)
 	if fc.Field.Alias != fc.Field.Name {
-		attributes = append(attributes, attribute.String(graphqlFieldAlias, fc.Field.Alias))
+		span.SetAttributes(graphqlFieldAlias.String(fc.Field.Alias))
 	}
-	ctx, span := t.getTracer(ctx).Start(ctx, spanName, trace.WithSpanKind(trace.SpanKindServer), trace.WithAttributes(attributes...))
-	defer span.End()
 	res, err := next(ctx)
 	if errList := graphql.GetFieldErrors(ctx, fc); len(errList) > 0 {
 		span.SetStatus(codes.Error, errList.Error())

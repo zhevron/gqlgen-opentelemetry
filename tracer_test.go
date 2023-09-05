@@ -5,6 +5,7 @@ import (
 
 	"github.com/99designs/gqlgen/client"
 	"github.com/99designs/gqlgen/graphql/handler"
+	"github.com/99designs/gqlgen/graphql/handler/extension"
 	"github.com/stretchr/testify/suite"
 	"github.com/zhevron/gqlgen-opentelemetry/testserver"
 	"github.com/zhevron/gqlgen-opentelemetry/testserver/generated"
@@ -40,7 +41,7 @@ func (s *TracerSuite) TestQuery_SpanCreated() {
 
 	spans := s.Exporter.GetSpans()
 	s.Require().Len(spans, 1)
-	s.Require().Len(spans[0].Attributes, 5)
+	s.Require().Len(spans[0].Attributes, 6)
 
 	operationName := findAttributeByName(spans[0].Attributes, semconv.GraphqlOperationNameKey)
 	s.Require().NotNil(operationName)
@@ -117,7 +118,7 @@ func (s *TracerSuite) TestMutation_SpanCreated() {
 
 	spans := s.Exporter.GetSpans()
 	s.Require().Len(spans, 1)
-	s.Require().Len(spans[0].Attributes, 5)
+	s.Require().Len(spans[0].Attributes, 6)
 
 	operationName := findAttributeByName(spans[0].Attributes, semconv.GraphqlOperationNameKey)
 	s.Require().NotNil(operationName)
@@ -169,6 +170,7 @@ func (s *TracerSuite) createTestClient(tracer *Tracer) *client.Client {
 		Resolvers: &testserver.Resolver{},
 	}))
 	handler.Use(tracer)
+	handler.Use(extension.FixedComplexityLimit(100))
 	return client.New(handler)
 }
 
