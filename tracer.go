@@ -48,6 +48,9 @@ func (t Tracer) InterceptResponse(ctx context.Context, next graphql.ResponseHand
 		return next(ctx)
 	}
 	oc := graphql.GetOperationContext(ctx)
+	if oc.Operation == nil  {
+		return next(ctx)
+	}
 	operationType := getOperationTypeAttribute(oc)
 	spanName := makeSpanName(oc.Operation.Name, operationType.Value.AsString())
 	ctx, span := t.getTracer(ctx).Start(ctx, spanName, trace.WithSpanKind(trace.SpanKindServer), trace.WithAttributes(baseAttributes...))
