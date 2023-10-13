@@ -10,6 +10,7 @@ import (
 	"github.com/zhevron/gqlgen-opentelemetry/v2/testserver"
 	"github.com/zhevron/gqlgen-opentelemetry/v2/testserver/generated"
 	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/codes"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/sdk/trace/tracetest"
 	semconv "go.opentelemetry.io/otel/semconv/v1.20.0"
@@ -107,6 +108,20 @@ func (s *TracerSuite) TestQuery_WithFieldSpans_Alias() {
 	fieldAlias := findAttributeByName(span.Attributes, graphqlFieldAlias)
 	s.Require().NotNil(fieldAlias)
 	s.Require().Equal(fieldAlias.Value.AsString(), "myGreeting")
+}
+
+func (s *TracerSuite) TestQuery_ParsingError() {
+	c := s.createTestClient(&Tracer{})
+
+	query := "query GetGreeting { greeting"
+	var res struct{ Greeting string }
+	s.Require().Error(c.Post(query, &res))
+
+	spans := s.Exporter.GetSpans()
+	s.Require().Len(spans, 1)
+	s.Require().Equal(spans[0].Name, "GraphQL Operation")
+	s.Require().Equal(codes.Error, spans[0].Status.Code)
+	s.Require().Len(spans[0].Attributes, 3)
 }
 
 func (s *TracerSuite) TestMutation_SpanCreated() {
