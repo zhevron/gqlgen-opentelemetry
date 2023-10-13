@@ -119,7 +119,7 @@ func (s *TracerSuite) TestQuery_ParsingError() {
 
 	spans := s.Exporter.GetSpans()
 	s.Require().Len(spans, 1)
-	s.Require().Equal(spans[0].Name, "GraphQL Operation")
+	s.Require().Equal("GraphQL Operation", spans[0].Name)
 	s.Require().Equal(codes.Error, spans[0].Status.Code)
 	s.Require().Len(spans[0].Attributes, 3)
 }
