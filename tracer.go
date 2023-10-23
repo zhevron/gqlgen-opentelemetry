@@ -48,15 +48,21 @@ func (t Tracer) InterceptResponse(ctx context.Context, next graphql.ResponseHand
 		return next(ctx)
 	}
 	oc := graphql.GetOperationContext(ctx)
+	operationName := oc.OperationName
+	if oc.Operation != nil && oc.Operation.Name != "" {
+		operationName = oc.Operation.Name
+	}
 	operationType := getOperationTypeAttribute(oc)
-	spanName := makeSpanName(oc.Operation.Name, operationType.Value.AsString())
+	spanName := makeSpanName(operationName, operationType.Value.AsString())
 	ctx, span := t.getTracer(ctx).Start(ctx, spanName, trace.WithSpanKind(trace.SpanKindServer), trace.WithAttributes(baseAttributes...))
 	defer span.End()
 	span.SetAttributes(
-		semconv.GraphqlOperationName(oc.Operation.Name),
 		operationType,
 		semconv.GraphqlDocument(oc.RawQuery),
 	)
+	if operationName != "" {
+		span.SetAttributes(semconv.GraphqlOperationName(oc.Operation.Name))
+	}
 	if stats := extension.GetComplexityStats(ctx); stats != nil {
 		span.SetAttributes(graphqlComplexity.Int(stats.Complexity))
 	}
@@ -128,6 +134,9 @@ func makeSpanName(operationName, operationType string) string {
 }
 
 func getOperationTypeAttribute(oc *graphql.OperationContext) attribute.KeyValue {
+	if oc.Operation == nil {
+		return attribute.String("", "")
+	}
 	switch oc.Operation.Operation {
 	case ast.Mutation:
 		return semconv.GraphqlOperationTypeMutation
