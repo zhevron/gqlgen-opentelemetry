@@ -61,7 +61,7 @@ func (t Tracer) InterceptResponse(ctx context.Context, next graphql.ResponseHand
 		semconv.GraphqlDocument(oc.RawQuery),
 	)
 	if operationName != "" {
-		span.SetAttributes(semconv.GraphqlOperationName(oc.Operation.Name))
+		span.SetAttributes(semconv.GraphqlOperationName(operationName))
 	}
 	if stats := extension.GetComplexityStats(ctx); stats != nil {
 		span.SetAttributes(graphqlComplexity.Int(stats.Complexity))
