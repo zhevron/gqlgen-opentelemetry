@@ -115,13 +115,13 @@ func (s *TracerSuite) TestQuery_ParsingError() {
 
 	query := "query GetGreeting { greeting"
 	var res struct{ Greeting string }
-	s.Require().Error(c.Post(query, &res))
+	s.Require().Error(c.Post(query, &res, func(req *client.Request) { req.OperationName = "GetGreeting" }))
 
 	spans := s.Exporter.GetSpans()
 	s.Require().Len(spans, 1)
 	s.Require().Equal("GraphQL Operation", spans[0].Name)
 	s.Require().Equal(codes.Error, spans[0].Status.Code)
-	s.Require().Len(spans[0].Attributes, 3)
+	s.Require().Len(spans[0].Attributes, 4)
 }
 
 func (s *TracerSuite) TestMutation_SpanCreated() {
