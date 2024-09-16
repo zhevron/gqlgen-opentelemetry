@@ -1,6 +1,6 @@
-//go:generate rm -rf generated
-//go:generate go run -mod=mod github.com/99designs/gqlgen generate
 package testserver
+
+// THIS CODE WILL BE UPDATED WITH SCHEMA CHANGES. PREVIOUS IMPLEMENTATION FOR SCHEMA CHANGES WILL BE KEPT IN THE COMMENT SECTION. IMPLEMENTATION FOR UNCHANGED SCHEMA WILL BE KEPT.
 
 import (
 	"context"
