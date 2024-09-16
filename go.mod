@@ -2,6 +2,8 @@ module github.com/zhevron/gqlgen-opentelemetry/v2
 
 go 1.21
 
+toolchain go1.23.1
+
 require (
 	github.com/99designs/gqlgen v0.17.49
 	github.com/stretchr/testify v1.9.0
