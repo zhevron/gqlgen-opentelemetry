@@ -6,3 +6,5 @@ exec:
   package: generated
 resolver:
   filename: resolvers.go
+omit_complexity: true
+omit_gqlgen_version_in_file_notice: true

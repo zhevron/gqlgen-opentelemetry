@@ -40,13 +40,6 @@ type DirectiveRoot struct {
 }
 
 type ComplexityRoot struct {
-	Mutation struct {
-		Greet func(childComplexity int, name string) int
-	}
-
-	Query struct {
-		Greeting func(childComplexity int) int
-	}
 }
 
 type executableSchema struct {
@@ -66,28 +59,6 @@ func (e *executableSchema) Schema() *ast.Schema {
 func (e *executableSchema) Complexity(typeName, field string, childComplexity int, rawArgs map[string]interface{}) (int, bool) {
 	ec := executionContext{nil, e, 0, 0, nil}
 	_ = ec
-	switch typeName + "." + field {
-
-	case "Mutation.greet":
-		if e.complexity.Mutation.Greet == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_greet_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.Greet(childComplexity, args["name"].(string)), true
-
-	case "Query.greeting":
-		if e.complexity.Query.Greeting == nil {
-			break
-		}
-
-		return e.complexity.Query.Greeting(childComplexity), true
-
-	}
 	return 0, false
 }
 
