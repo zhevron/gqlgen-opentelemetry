@@ -5,7 +5,7 @@ go 1.22.5
 toolchain go1.23.1
 
 require (
-	github.com/99designs/gqlgen v0.17.60
+	github.com/99designs/gqlgen v0.17.61
 	github.com/stretchr/testify v1.10.0
 	github.com/vektah/gqlparser/v2 v2.5.20
 	go.opentelemetry.io/otel v1.32.0
@@ -25,6 +25,6 @@ require (
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/sosodev/duration v1.3.1 // indirect
 	go.opentelemetry.io/otel/metric v1.32.0 // indirect
-	golang.org/x/sys v0.27.0 // indirect
+	golang.org/x/sys v0.28.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
