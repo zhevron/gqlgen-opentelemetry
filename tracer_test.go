@@ -6,6 +6,7 @@ import (
 	"github.com/99designs/gqlgen/client"
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/handler/extension"
+	"github.com/99designs/gqlgen/graphql/handler/transport"
 	"github.com/stretchr/testify/suite"
 	"github.com/zhevron/gqlgen-opentelemetry/v2/testserver"
 	"github.com/zhevron/gqlgen-opentelemetry/v2/testserver/generated"
@@ -181,9 +182,10 @@ func (s *TracerSuite) TestMutation_WithVariables() {
 
 func (s *TracerSuite) createTestClient(tracer *Tracer) *client.Client {
 	tracer.TracerProvider = s.TracerProvider
-	handler := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{
+	handler := handler.New(generated.NewExecutableSchema(generated.Config{
 		Resolvers: &testserver.Resolver{},
 	}))
+	handler.AddTransport(transport.POST{})
 	handler.Use(tracer)
 	handler.Use(extension.FixedComplexityLimit(100))
 	return client.New(handler)
