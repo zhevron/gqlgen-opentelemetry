@@ -28,7 +28,8 @@ func TestMakeAttributeValue(t *testing.T) {
 		{valueTestStruct{Value: "test"}, attribute.STRING},
 	}
 	for _, v := range values {
-		assert.Equal(t, v.expectedType, makeAttributeValue(v.input).Type())
+		value := makeAttributeValue(v.input)
+		assert.Equal(t, v.expectedType, value.Type())
 	}
 }
 
@@ -44,7 +45,10 @@ func TestMakeAttributeSliceValue(t *testing.T) {
 		{valueTestStruct{Value: "test"}, attribute.STRINGSLICE},
 	}
 	for _, v := range values {
-		a := []interface{}{v.input}
-		assert.Equal(t, v.expectedType, makeAttributeSliceValue(a).Type())
+		slice := []interface{}{v.input}
+		value := makeAttributeSliceValue(slice)
+
+		assert.Equal(t, v.expectedType, value.Type())
+		assert.Len(t, value.AsInterface(), len(slice))
 	}
 }

@@ -9,7 +9,7 @@ import (
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
-	semconv "go.opentelemetry.io/otel/semconv/v1.25.0"
+	semconv "go.opentelemetry.io/otel/semconv/v1.34.0"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -25,8 +25,8 @@ const (
 )
 
 var baseAttributes = []attribute.KeyValue{
-	semconv.OTelLibraryName(extensionName),
-	semconv.OTelLibraryVersion(extensionVersion),
+	semconv.OTelScopeName(extensionName),
+	semconv.OTelScopeVersion(extensionVersion),
 }
 
 type Tracer struct {
@@ -58,10 +58,10 @@ func (t Tracer) InterceptResponse(ctx context.Context, next graphql.ResponseHand
 	defer span.End()
 	span.SetAttributes(
 		operationType,
-		semconv.GraphqlDocument(oc.RawQuery),
+		semconv.GraphQLDocument(oc.RawQuery),
 	)
 	if operationName != "" {
-		span.SetAttributes(semconv.GraphqlOperationName(operationName))
+		span.SetAttributes(semconv.GraphQLOperationName(operationName))
 	}
 	if stats := extension.GetComplexityStats(ctx); stats != nil {
 		span.SetAttributes(graphqlComplexity.Int(stats.Complexity))
@@ -139,13 +139,13 @@ func getOperationTypeAttribute(oc *graphql.OperationContext) attribute.KeyValue 
 	}
 	switch oc.Operation.Operation {
 	case ast.Mutation:
-		return semconv.GraphqlOperationTypeMutation
+		return semconv.GraphQLOperationTypeMutation
 	case ast.Subscription:
-		return semconv.GraphqlOperationTypeSubscription
+		return semconv.GraphQLOperationTypeSubscription
 	case ast.Query:
-		return semconv.GraphqlOperationTypeQuery
+		return semconv.GraphQLOperationTypeQuery
 	default:
-		return semconv.GraphqlOperationTypeQuery
+		return semconv.GraphQLOperationTypeQuery
 	}
 }
 
