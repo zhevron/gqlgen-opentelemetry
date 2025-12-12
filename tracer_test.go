@@ -14,7 +14,7 @@ import (
 	"go.opentelemetry.io/otel/codes"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/sdk/trace/tracetest"
-	semconv "go.opentelemetry.io/otel/semconv/v1.25.0"
+	semconv "go.opentelemetry.io/otel/semconv/v1.38.0"
 )
 
 type TracerSuite struct {
@@ -45,15 +45,15 @@ func (s *TracerSuite) TestQuery_SpanCreated() {
 	s.Require().Len(spans, 1)
 	s.Require().Len(spans[0].Attributes, 6)
 
-	operationName := findAttributeByName(spans[0].Attributes, semconv.GraphqlOperationNameKey)
+	operationName := findAttributeByName(spans[0].Attributes, semconv.GraphQLOperationNameKey)
 	s.Require().NotNil(operationName)
 	s.Require().Equal(operationName.Value.AsString(), "GetGreeting")
 
-	operationType := findAttributeByName(spans[0].Attributes, semconv.GraphqlOperationTypeKey)
+	operationType := findAttributeByName(spans[0].Attributes, semconv.GraphQLOperationTypeKey)
 	s.Require().NotNil(operationType)
-	s.Require().Equal(*operationType, semconv.GraphqlOperationTypeQuery)
+	s.Require().Equal(*operationType, semconv.GraphQLOperationTypeQuery)
 
-	document := findAttributeByName(spans[0].Attributes, semconv.GraphqlDocumentKey)
+	document := findAttributeByName(spans[0].Attributes, semconv.GraphQLDocumentKey)
 	s.Require().NotNil(document)
 	s.Require().Equal(document.Value.AsString(), query)
 }
@@ -136,15 +136,15 @@ func (s *TracerSuite) TestMutation_SpanCreated() {
 	s.Require().Len(spans, 1)
 	s.Require().Len(spans[0].Attributes, 6)
 
-	operationName := findAttributeByName(spans[0].Attributes, semconv.GraphqlOperationNameKey)
+	operationName := findAttributeByName(spans[0].Attributes, semconv.GraphQLOperationNameKey)
 	s.Require().NotNil(operationName)
 	s.Require().Equal(operationName.Value.AsString(), "Greet")
 
-	operationType := findAttributeByName(spans[0].Attributes, semconv.GraphqlOperationTypeKey)
+	operationType := findAttributeByName(spans[0].Attributes, semconv.GraphQLOperationTypeKey)
 	s.Require().NotNil(operationType)
-	s.Require().Equal(*operationType, semconv.GraphqlOperationTypeMutation)
+	s.Require().Equal(*operationType, semconv.GraphQLOperationTypeMutation)
 
-	document := findAttributeByName(spans[0].Attributes, semconv.GraphqlDocumentKey)
+	document := findAttributeByName(spans[0].Attributes, semconv.GraphQLDocumentKey)
 	s.Require().NotNil(document)
 	s.Require().Equal(document.Value.AsString(), query)
 }
