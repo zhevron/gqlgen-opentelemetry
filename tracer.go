@@ -9,13 +9,13 @@ import (
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
-	semconv "go.opentelemetry.io/otel/semconv/v1.38.0"
+	semconv "go.opentelemetry.io/otel/semconv/v1.39.0"
 	"go.opentelemetry.io/otel/trace"
 )
 
 const (
 	extensionName          = "github.com/zhevron/gqlgen-opentelemetry"
-	extensionVersion       = "1.0.4"
+	extensionVersion       = "2.4.12"
 	graphqlComplexity      = attribute.Key("graphql.operation.complexity")
 	graphqlFieldAlias      = attribute.Key("graphql.field.alias")
 	graphqlFieldName       = attribute.Key("graphql.field.name")
