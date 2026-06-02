@@ -2,7 +2,7 @@ module github.com/zhevron/gqlgen-opentelemetry/v2
 
 go 1.25.0
 
-toolchain go1.26.1
+toolchain go1.26.3
 
 require (
 	github.com/99designs/gqlgen v0.17.90
