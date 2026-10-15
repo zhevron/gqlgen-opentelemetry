@@ -8,7 +8,7 @@ This library provides OpenTelemetry (OTEL) instrumentation for `gqlgen` server r
 ## Installation
 Add the package to your project:
 ```sh
-go get github.com/zhevron/gqlgen-opentelemetry
+go get github.com/zhevron/gqlgen-opentelemetry/v2
 ```
 
 ## Usage
